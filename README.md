@@ -1,6 +1,8 @@
 # mongoquery
 
-Typescript utilities to manipulate the MongoDB query language
+Typescript utilities to manipulate the MongoDB query language.
+
+Get it with `npm add @coyotte508/mongo-query`.
 
 ## parseFilter
 
