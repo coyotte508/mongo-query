@@ -4,6 +4,11 @@ import type { Filter } from "mongodb";
 export function inverseFilter<T>(filter: Filter<T>): Filter<T> {
   const keys = Object.keys(filter) as Array<keyof Filter<T>>;
 
+  if (typeof filter === "string") {
+    // Should never happen
+    return { $nor: filter };
+  }
+
   if (!keys.length) {
     return {};
   }
@@ -26,6 +31,15 @@ export function inverseFilter<T>(filter: Filter<T>): Filter<T> {
     };
   }
 
+  if ("$nor" in filter) {
+    if (filter.$nor.length === 1) {
+      return filter.$nor[0] as any;
+    }
+    return {
+      $or: filter.$nor,
+    };
+  }
+
   // !(A || B) => !A && !B
   if ("$or" in filter) {
     // Could also use $nor
@@ -34,7 +48,7 @@ export function inverseFilter<T>(filter: Filter<T>): Filter<T> {
 
   const [key] = keys;
   const val = filter[key] as any;
-  if (typeof val === "object" && Object.keys(val)[0]?.startsWith("$")) {
+  if (typeof val === "object" && !Array.isArray(val) && Object.keys(val)[0]?.startsWith("$")) {
     if (Object.keys(val).length === 1) {
       if ("$in" in val) {
         return { [key]: { $nin: val.$in } } as any;

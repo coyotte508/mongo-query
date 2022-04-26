@@ -6,7 +6,7 @@ type SearchItemJson<ValueType = string> = ValueType;
 export type SearchValueJson<ValueType = string> =
   | SearchItemJson<ValueType>
   | SearchGroupJson<ValueType>
-  | { $nor: SearchValueJson<ValueType> };
+  | { $nor: [SearchValueJson<ValueType>] };
 
 interface _SearchGroupJson<ValueType = string> {
   $or: SearchValueJson<ValueType>[];
@@ -254,7 +254,7 @@ export class SearchGroup {
 
         let neg = value.firstOperator === UnarySearchOperator.Not;
         for (const member of value) {
-          items.push(neg ? { $nor: jsonify(member) } : jsonify(member));
+          items.push(neg ? { $nor: [jsonify(member)] } : jsonify(member));
 
           neg = member.next?.operator === SearchOperator.AndNot;
         }
@@ -280,10 +280,18 @@ export class SearchGroup {
 }
 
 /**
- * @param combination Human-readable boolean combination, eg !(A&&(!B)&&(C||D))
+ * @param filter Human-readable boolean filter, eg !(A&&(!B)&&(C||D))
  * @param replace A map or replacement function to replace keys by mongodb filters
  * @returns A mongodb filter
  */
-export function parseFilter(combination: string, replace?: Map<string, any> | ((key: string) => any)): Filter<any> {
-  return SearchGroup.fromString(combination).toJSON(replace);
+export function parseFilter(filter: string): SearchGroupJson<string>;
+export function parseFilter<T>(
+  filter: string,
+  replace: Map<string, Filter<T>> | ((key: string) => Filter<T>)
+): Filter<T>;
+export function parseFilter<T>(
+  filter: string,
+  replace?: Map<string, Filter<T>> | ((key: string) => Filter<T>)
+): Filter<T> {
+  return SearchGroup.fromString(filter).toJSON(replace) as unknown as Filter<T>;
 }

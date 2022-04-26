@@ -1,5 +1,6 @@
 import { expect } from "chai";
-import { SearchGroup } from "./search-group";
+import { parseFilter, SearchGroup } from "./search-group";
+import { simplifyFilter } from "./simplify-filter";
 
 describe("SearchGroup", () => {
   it("should parse its own `toString()` output", () => {
@@ -24,33 +25,36 @@ describe("SearchGroup", () => {
   });
 
   it("should produce correct JSON representation", () => {
+    const parsed = parseFilter("!(A&&(!B)&&(C||D))", (key) => ({ [key]: 1 }));
     expect(SearchGroup.fromString("(foo&&bar&!((ab||cd)&&(def||ghi)))").toJSON()).to.deep.equal({
-      $and: ["foo", "bar", { $nor: { $and: [{ $or: ["ab", "cd"] }, { $or: ["def", "ghi"] }] } }],
+      $and: ["foo", "bar", { $nor: [{ $and: [{ $or: ["ab", "cd"] }, { $or: ["def", "ghi"] }] }] }],
     });
 
     expect(SearchGroup.fromString("(foo&&bar&!ab||cd&&def||ghi)").toJSON()).to.deep.equal({
-      $or: [{ $and: ["foo", "bar", { $nor: "ab" }] }, { $and: ["cd", "def"] }, "ghi"],
+      $or: [{ $and: ["foo", "bar", { $nor: ["ab"] }] }, { $and: ["cd", "def"] }, "ghi"],
     });
 
     expect(SearchGroup.fromString("(foo&&bar&!(ab||cd)&&def||ghi)").toJSON()).to.deep.equal({
-      $or: [{ $and: ["foo", "bar", { $nor: { $or: ["ab", "cd"] } }, "def"] }, "ghi"],
+      $or: [{ $and: ["foo", "bar", { $nor: [{ $or: ["ab", "cd"] }] }, "def"] }, "ghi"],
     });
 
     expect(SearchGroup.fromString("(!a)").toJSON()).to.deep.equal({
-      $and: [{ $nor: "a" }],
+      $and: [{ $nor: ["a"] }],
     });
 
     expect(SearchGroup.fromString("(!(bar&&(key1||key2))&&foo)").toJSON()).to.deep.equal({
       $and: [
         {
-          $nor: {
-            $and: [
-              "bar",
-              {
-                $or: ["key1", "key2"],
-              },
-            ],
-          },
+          $nor: [
+            {
+              $and: [
+                "bar",
+                {
+                  $or: ["key1", "key2"],
+                },
+              ],
+            },
+          ],
         },
         "foo",
       ],

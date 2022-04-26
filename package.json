@@ -1,9 +1,12 @@
 {
   "name": "@coyotte508/mongo-query",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Utils to manipulate MongoDB's query language",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "src/index.ts",
   "scripts": {
+    "build": "rm -Rf dist && tsc -d --module commonjs && rm dist/*.spec.*",
+    "prepublishOnly": "npm run build",
     "test": "mocha -r ts-node/register src/**/*.spec.ts"
   },
   "repository": {

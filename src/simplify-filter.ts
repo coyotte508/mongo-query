@@ -5,13 +5,13 @@ import { omit } from "./utils";
 
 export function simplifyFilter<T>(filter: Filter<T>): Filter<T> {
   if ("$nor" in filter) {
-    filter = joinAnd(omit(filter, "$nor" as any) as Filter<T>, inverseFilter(filter.$nor) as Filter<T>);
+    filter = joinAnd(omit(filter, ["$nor"]) as Filter<T>, ...(filter.$nor.map(inverseFilter) as Filter<T>[]));
   }
   if ("$and" in filter) {
     if (filter.$and.length === 0) {
       delete filter.$and;
     } else {
-      filter = joinAnd(omit(filter, "$and" as any) as Filter<T>, ...(filter.$and.map(simplifyFilter) as Filter<T>[]));
+      filter = joinAnd(omit(filter, ["$and"]) as Filter<T>, ...(filter.$and.map(simplifyFilter) as Filter<T>[]));
     }
   }
   if ("$or" in filter) {

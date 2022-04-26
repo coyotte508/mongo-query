@@ -12,7 +12,11 @@ Get it with `npm add @coyotte508/mongo-query`.
  * @param replace A map or replacement function to replace keys by mongodb filters
  * @returns A mongodb filter
  */
-export function parseFilter(combination: string, replace?: Map<string, any> | ((key: string) => any)): Filter<any>
+function parseFilter(filter: string): SearchGroupJson<string>;
+function parseFilter<T>(
+  filter: string,
+  replace: Map<string, Filter<T>> | ((key: string) => Filter<T>)
+): Filter<T>;
 ```
 
 This converts a human-readable boolean combination into a MongoDB filter.
@@ -45,6 +49,14 @@ replace = new Map([
 
 The return value is a mongodb filter, with a combination of `$and`, `$or` and `$nor`.
 
+For example, `parseFilter("!(A&&(!B)&&(C||D))")` will return:
+
+```ts
+{"$and":[{"$nor":[{"$and":["A",{"$and":[{"$nor":["B"]}]},{"$or":["C","D"]}]}]}]}
+```
+
+The output is verbose, so use it in conjunction with `simplifyFilter`.
+
 ## simplifyFilter
 
 ```ts
@@ -53,7 +65,11 @@ function simplifyFilter<T>(filter: Filter<T>): Filter<T>
 
 The result of `parseFilter` can be verbose, with many logical groupings. `simplifyFilter` aims to simplify the filter so it becomes less verbose.
 
-For example, `{$and: [{$and: [A, B]}, C]}` will become `{$and: [A, B, C]}`.
+For example, `simplifyFilter(parseFilter("!(A&&(!B)&&(C||D))"), key => ({[key]: 1}))` becomes:
+
+```ts
+{"$or":[{"A":{"$ne":1}},{"B":1},{"C":{"$ne":1},"D":{"$ne":1}}]}
+```
 
 ## inverseFilter
 
