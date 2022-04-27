@@ -8,7 +8,7 @@ Get it with `npm add @coyotte508/mongo-query`.
 
 ```ts
 /**
- * @param combination Human-readable boolean combination, eg !(A&&(!B)&&(C||D))
+ * @param filter Human-readable boolean filter, eg !(A&&(!B)&&(C||D))
  * @param replace A map or replacement function to replace keys by mongodb filters
  * @returns A mongodb filter
  */
@@ -19,9 +19,9 @@ function parseFilter<T>(
 ): Filter<T>;
 ```
 
-This converts a human-readable boolean combination into a MongoDB filter.
+This converts a human-readable boolean filter into a MongoDB filter.
 
-`combination` can make use of the following operators: `!`, `||` and `&&`, and parenthesis. It's not possible to chain an operator directly with `!`, but
+`filter` can make use of the following operators: `!`, `||` and `&&`, and parenthesis. It's not possible to chain an operator directly with `!`, but
 there is a shortcut: `A&!B` is equivalent to `A&&(!B)`.
 
 `replace` is a map or function used to replace `A`, `B`, ... by real mongodb expressions.
