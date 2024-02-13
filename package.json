@@ -1,6 +1,6 @@
 {
   "name": "@coyotte508/mongo-query",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Utils to manipulate MongoDB's query language",
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --clean --dts",
@@ -41,5 +41,10 @@
     "type-fest": "^2.12.2",
     "typescript": "^5.3.3"
   },
+  "files": [
+    "dist",
+    "src", 
+    "tsconfig.json"
+  ],
   "private": false
 }
