@@ -4,6 +4,30 @@ Typescript utilities to manipulate the MongoDB query language.
 
 Get it with `npm add @coyotte508/mongo-query`.
 
+## simplifyFilter
+
+```ts
+function simplifyFilter<T>(filter: Filter<T>): Filter<T>
+```
+
+The result of `parseFilter` can be verbose, with many logical groupings. `simplifyFilter` aims to simplify the filter so it becomes less verbose.
+
+For example, `simplifyFilter({$and: [{}, {x: 1}, {y: 2}]}` becomes:
+
+```ts
+{x: 1, y: 2}
+```
+
+## inverseFilter
+
+```ts
+function inverseFilter<T>(filter: Filter<T>): Filter<T>
+```
+
+This inverts a filter. For example, `inverseFilter({a: {$in: [1, 2]}})` will become `{a: {$nin: [1, 2]}}`.
+
+It tries to stay simple but not every inversion is implemented. In which case, `$not` is used.
+
 ## parseFilter
 
 ```ts
@@ -56,27 +80,3 @@ For example, `parseFilter("!(A&&(!B)&&(C||D))")` will return:
 ```
 
 The output is verbose, so use it in conjunction with `simplifyFilter`.
-
-## simplifyFilter
-
-```ts
-function simplifyFilter<T>(filter: Filter<T>): Filter<T>
-```
-
-The result of `parseFilter` can be verbose, with many logical groupings. `simplifyFilter` aims to simplify the filter so it becomes less verbose.
-
-For example, `simplifyFilter(parseFilter("!(A&&(!B)&&(C||D))"), key => ({[key]: 1}))` becomes:
-
-```ts
-{"$or":[{"A":{"$ne":1}},{"B":1},{"C":{"$ne":1},"D":{"$ne":1}}]}
-```
-
-## inverseFilter
-
-```ts
-function inverseFilter<T>(filter: Filter<T>): Filter<T>
-```
-
-This inverts a filter. For example, `inverseFilter({a: {$in: [1, 2]}})` will become `{a: {$nin: [1, 2]}}`.
-
-It tries to stay simple but not every inversion is implemented. In which case, `$not` is used.
