@@ -2,10 +2,8 @@
   "name": "@coyotte508/mongo-query",
   "version": "1.0.1",
   "description": "Utils to manipulate MongoDB's query language",
-  "main": "dist/index.js",
-  "types": "src/index.ts",
   "scripts": {
-    "build": "rm -Rf dist && tsc -d --module commonjs && rm dist/*.spec.*",
+    "build": "tsup src/index.ts --format cjs,esm --clean --dts",
     "prepublishOnly": "npm run build",
     "test": "mocha -r ts-node/register src/**/*.spec.ts"
   },
@@ -13,6 +11,16 @@
     "type": "git",
     "url": "https://github.com/coyotte508/mongo-query"
   },
+  "main": "./dist/index.js",
+	"module": "./dist/index.mjs",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"require": "./dist/index.js",
+			"import": "./dist/index.mjs"
+		}
+	},
   "keywords": [
     "mongodb",
     "mongo",
@@ -29,8 +37,9 @@
     "mocha": "^9.2.2",
     "mongodb": "^6.3.0",
     "ts-node": "^10.7.0",
+    "tsup": "^8.0.2",
     "type-fest": "^2.12.2",
-    "typescript": "^4.6.3"
+    "typescript": "^5.3.3"
   },
   "private": false
 }

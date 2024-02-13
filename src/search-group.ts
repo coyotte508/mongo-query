@@ -284,7 +284,7 @@ export class SearchGroup {
  * @param replace A map or replacement function to replace keys by mongodb filters
  * @returns A mongodb filter
  */
-export function parseFilter(filter: string): SearchGroupJson<string>;
+export function parseFilter(filter: string): Filter<any>;
 export function parseFilter<T>(
   filter: string,
   replace: Map<string, Filter<T>> | ((key: string) => Filter<T>)

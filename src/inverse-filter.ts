@@ -60,12 +60,12 @@ export function inverseFilter<T>(filter: Filter<T>): Filter<T> {
         return { [key]: { $exists: !val.$exists } } as any;
       }
     }
-    return { [key]: { $not: filter[key] } } as any;
+    return { [key]: { $not: val } } as any;
   }
 
-  if (filter[key] instanceof RegExp) {
-    return { [key]: { $not: filter[key] } } as any;
+  if (val && typeof val === "object" && val instanceof RegExp) {
+    return { [key]: { $not: val } } as any;
   }
 
-  return { [key]: { $ne: filter[key] } } as any;
+  return { [key]: { $ne: val } } as any;
 }
