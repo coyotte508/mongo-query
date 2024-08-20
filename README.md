@@ -42,8 +42,7 @@ function parseFilter<T>(filter: string, replace: Map<string, Filter<T>> | ((key:
 
 This converts a human-readable boolean filter into a MongoDB filter.
 
-`filter` can make use of the following operators: `!`, `||` and `&&`, and parenthesis. It's not possible to chain an operator directly with `!`, but
-there is a shortcut: `A&!B` is equivalent to `A&&(!B)`.
+`filter` can make use of the following operators: `!` (NOT), `||` (OR) and `&&` (AND), and parenthesis.
 
 `replace` is a map or function used to replace `A`, `B`, ... by real mongodb expressions.
 

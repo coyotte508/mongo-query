@@ -1,81 +1,133 @@
 import { expect } from "chai";
 import { SearchGroup } from "./search-group";
+import util from "util";
 
 describe("SearchGroup", () => {
   it("should parse its own `toString()` output", () => {
-    const strings = ["(foo&&bar&!((ab||cd)&&(def||ghi)))", "(a&&b&!(c||(d&&e)))", "(!a)", "(!a&&b)"];
+    const strings = ["(!a)", "(!a&&b)", "(a&&b&&!(c||(d&&e)))", "(foo&&bar&&!((ab||cd)&&(def||ghi)))"];
 
     for (const string of strings) {
-      expect(SearchGroup.fromString(string).toString()).to.equal(string);
+      const group = SearchGroup.fromString(string);
+      expect(group.toString()).to.equal(string);
     }
   });
 
   it("should disambiguate", () => {
-    const string = "(foo&&bar&!((ab||cd)&&(def||ghi)))";
-    expect(SearchGroup.fromString(string).disambiguate().toString()).to.equal(string);
-
-    expect(SearchGroup.fromString("(foo&&bar&!ab||cd&&def||ghi)").disambiguate().toString()).to.equal(
-      "((foo&&bar&!ab)||(cd&&def)||ghi)",
-    );
-
-    expect(SearchGroup.fromString("(foo&&bar&!(ab||cd)&&def||ghi)").disambiguate().toString()).to.equal(
-      "((foo&&bar&!(ab||cd)&&def)||ghi)",
-    );
+    const results = [
+      {
+        input: "(foo&&(bar||def))",
+        output: "(foo&&(bar||def))",
+      },
+      {
+        input: "(foo&&bar&&!((ab||cd)&&(def||ghi)))",
+        output: "(foo&&bar&&!((ab||cd)&&(def||ghi)))",
+      },
+      {
+        input: "(foo&&bar&&!ab||cd&&def||ghi)",
+        output: "((foo&&bar&&!ab)||(cd&&def)||ghi)",
+      },
+      {
+        input: "(foo&&bar&&!(ab||cd)&&def||ghi)",
+        output: "((foo&&bar&&!(ab||cd)&&def)||ghi)",
+      },
+    ];
+    let i = 0;
+    for (const { input, output } of results) {
+      const group = SearchGroup.fromString(input);
+      group.disambiguate();
+      expect(group.toString()).to.equal(output, `Test case ${i}`);
+      i++;
+    }
   });
 
   it("should produce correct JSON representation", () => {
-    expect(SearchGroup.fromString("(foo&&bar&!((ab||cd)&&(def||ghi)))").toJSON()).to.deep.equal(
+    const results = [
       {
-        $and: ["foo", "bar", { $nor: [{ $and: [{ $or: ["ab", "cd"] }, { $or: ["def", "ghi"] }] }] }],
+        input: "(!a)",
+        output: {
+          $and: [{ $nor: ["a"] }],
+        },
       },
-      "(foo&&bar&!((ab||cd)&&(def||ghi)))",
-    );
+      {
+        input: "(!a&&b)",
+        output: {
+          $and: [{ $nor: ["a"] }, "b"],
+        },
+      },
+      {
+        input: "(a&&b)",
+        output: {
+          $and: ["a", "b"],
+        },
+      },
+      {
+        input: "!(a&&b)",
+        output: {
+          $or: [{ $nor: ["a"] }, { $nor: ["b"] }],
+        },
+      },
+      {
+        input: "(foo&&bar&&!((ab||cd)&&(def||ghi)))",
+        output: {
+          $and: ["foo", "bar", { $or: [{ $nor: ["ab", "cd"] }, { $nor: ["def", "ghi"] }] }],
+        },
+      },
+      {
+        input: "(foo&&bar&&!ab||cd&&def||ghi)",
+        output: {
+          $or: [{ $and: ["foo", "bar", { $nor: ["ab"] }] }, { $and: ["cd", "def"] }, "ghi"],
+        },
+      },
+      {
+        input: "(foo&&bar&&!(ab||cd)&&def||ghi)",
+        output: {
+          $or: [{ $and: ["foo", "bar", { $nor: ["ab", "cd"] }, "def"] }, "ghi"],
+        },
+      },
+      {
+        input: "(!(bar&&(key1||key2))&&foo)",
+        output: {
+          $and: [
+            {
+              $or: [{ $nor: ["bar"] }, { $nor: ["key1", "key2"] }],
+            },
+            "foo",
+          ],
+        },
+      },
+    ];
 
-    expect(SearchGroup.fromString("(foo&&bar&!ab||cd&&def||ghi)").toJSON()).to.deep.equal(
-      {
-        $or: [{ $and: ["foo", "bar", { $nor: ["ab"] }] }, { $and: ["cd", "def"] }, "ghi"],
-      },
-      "(foo&&bar&!ab||cd&&def||ghi)",
-    );
+    let i = 0;
+    for (const { input, output } of results) {
+      const group = SearchGroup.fromString(input);
+      expect(group.toJSON()).to.deep.equal(output, `Test case ${i}`);
+      i++;
+    }
+  });
 
-    expect(SearchGroup.fromString("(foo&&bar&!(ab||cd)&&def||ghi)").toJSON()).to.deep.equal(
-      {
-        $or: [{ $and: ["foo", "bar", { $nor: [{ $or: ["ab", "cd"] }] }, "def"] }, "ghi"],
-      },
-      "(foo&&bar&!(ab||cd)&&def||ghi)",
-    );
+  it("should product correct string representation", () => {
+    const group = SearchGroup.fromString("!(A&&C)");
 
-    expect(SearchGroup.fromString("(!a)").toJSON()).to.deep.equal(
-      {
-        $and: [{ $nor: ["a"] }],
-      },
-      "(!a)",
-    );
-
-    expect(SearchGroup.fromString("(!(bar&&(key1||key2))&&foo)").toJSON()).to.deep.equal(
-      {
-        $and: [
-          {
-            $nor: [
-              {
-                $and: [
-                  "bar",
-                  {
-                    $or: ["key1", "key2"],
-                  },
-                ],
-              },
-            ],
-          },
-          "foo",
-        ],
-      },
-      "(!(bar&&(key1||key2))&&foo)",
-    );
+    expect(group.toString()).to.equal("!(A&&C)");
   });
 
   it("should list keys", () => {
     const group = SearchGroup.fromString("!(A&&(!B)&&(C||D))");
-    expect([...group.keys()]).to.deep.equal(["A", "B", "C", "D"]);
+    expect([...group.keys]).to.deep.equal(["A", "B", "C", "D"]);
+  });
+
+  it("should be able to remove keys", () => {
+    const group = SearchGroup.fromString("!(A&&(!B)&&(C||D))");
+    expect(group.toString()).to.equal("!(A&&(!B)&&(C||D))");
+    group.keys = new Set(["A", "C"]);
+    expect(group.toString()).to.equal("!(A&&C)");
+  });
+
+  // Don't know whether to return !(A&&C&&E) or (!(A&&C)&&E)
+  // so not implemented for now
+  it.skip("should be able to add keys", () => {
+    const group = SearchGroup.fromString("!(A&&C)");
+    group.keys = new Set(["A", "C", "E"]);
+    expect(group.toString()).to.equal("!(A&&C&&E)");
   });
 });
