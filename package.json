@@ -1,6 +1,6 @@
 {
   "name": "@coyotte508/mongo-query",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Utils to manipulate MongoDB's query language",
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --clean --dts",
@@ -12,15 +12,15 @@
     "url": "https://github.com/coyotte508/mongo-query"
   },
   "main": "./dist/index.js",
-	"module": "./dist/index.mjs",
-	"types": "./dist/index.d.ts",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"require": "./dist/index.js",
-			"import": "./dist/index.mjs"
-		}
-	},
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs"
+    }
+  },
   "keywords": [
     "mongodb",
     "mongo",
@@ -36,6 +36,7 @@
     "chai": "^4.3.6",
     "mocha": "^9.2.2",
     "mongodb": "^6.3.0",
+    "prettier": "^3.3.3",
     "ts-node": "^10.7.0",
     "tsup": "^8.0.2",
     "type-fest": "^2.12.2",
@@ -43,7 +44,7 @@
   },
   "files": [
     "dist",
-    "src", 
+    "src",
     "tsconfig.json"
   ],
   "private": false

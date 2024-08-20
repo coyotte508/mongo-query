@@ -78,31 +78,27 @@ export class SearchGroup {
     item: SearchValue;
   } | null = null;
 
-  [Symbol.iterator](): IterableIterator<SearchValue> {
-    let current = this.first;
+  *[Symbol.iterator](): IterableIterator<SearchValue> {
+    let item = this.first;
+    
+    while (item) {
+      yield item;
+      item = item.next?.item ?? null;
+    }
+  }
 
-    const it = {
-      [Symbol.iterator]: () => it,
-      next() {
-        if (!current) {
-          return {
-            done: true,
-            value: null,
-          } as const;
+  *keys(): Iterable<string> {
+    const traverse: (group: SearchGroup) => Generator<string> = function *(group: SearchGroup) {
+      for (let member of group) {
+        if (member instanceof SearchItem) {
+          yield member.key;
+        } else {
+          yield *traverse(member);
         }
-
-        try {
-          return {
-            done: false,
-            value: current,
-          } as const;
-        } finally {
-          current = current.next?.item ?? null;
-        }
-      },
+      }
     };
 
-    return it;
+    return yield * traverse(this);
   }
 
   get isEmpty() {
@@ -277,21 +273,4 @@ export class SearchGroup {
 
     return jsonify(clone) as SearchGroupJson<T>;
   }
-}
-
-/**
- * @param filter Human-readable boolean filter, eg !(A&&(!B)&&(C||D))
- * @param replace A map or replacement function to replace keys by mongodb filters
- * @returns A mongodb filter
- */
-export function parseFilter(filter: string): Filter<any>;
-export function parseFilter<T>(
-  filter: string,
-  replace: Map<string, Filter<T>> | ((key: string) => Filter<T>)
-): Filter<T>;
-export function parseFilter<T>(
-  filter: string,
-  replace?: Map<string, Filter<T>> | ((key: string) => Filter<T>)
-): Filter<T> {
-  return SearchGroup.fromString(filter).toJSON(replace) as unknown as Filter<T>;
 }

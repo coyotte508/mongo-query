@@ -7,7 +7,7 @@ Get it with `npm add @coyotte508/mongo-query`.
 ## simplifyFilter
 
 ```ts
-function simplifyFilter<T>(filter: Filter<T>): Filter<T>
+function simplifyFilter<T>(filter: Filter<T>): Filter<T>;
 ```
 
 The result of `parseFilter` can be verbose, with many logical groupings. `simplifyFilter` aims to simplify the filter so it becomes less verbose.
@@ -21,7 +21,7 @@ For example, `simplifyFilter({$and: [{}, {x: 1}, {y: 2}]}` becomes:
 ## inverseFilter
 
 ```ts
-function inverseFilter<T>(filter: Filter<T>): Filter<T>
+function inverseFilter<T>(filter: Filter<T>): Filter<T>;
 ```
 
 This inverts a filter. For example, `inverseFilter({a: {$in: [1, 2]}})` will become `{a: {$nin: [1, 2]}}`.
@@ -37,10 +37,7 @@ It tries to stay simple but not every inversion is implemented. In which case, `
  * @returns A mongodb filter
  */
 function parseFilter(filter: string): SearchGroupJson<string>;
-function parseFilter<T>(
-  filter: string,
-  replace: Map<string, Filter<T>> | ((key: string) => Filter<T>)
-): Filter<T>;
+function parseFilter<T>(filter: string, replace: Map<string, Filter<T>> | ((key: string) => Filter<T>)): Filter<T>;
 ```
 
 This converts a human-readable boolean filter into a MongoDB filter.
@@ -56,7 +53,7 @@ For example, it can be:
 function replace(expr: `${key}:${val}`) {
   const [key, val] = expr.split(":");
 
-  return {key: {$in: val.split(',')}};
+  return { key: { $in: val.split(",") } };
 }
 ```
 
@@ -80,3 +77,9 @@ For example, `parseFilter("!(A&&(!B)&&(C||D))")` will return:
 ```
 
 The output is verbose, so use it in conjunction with `simplifyFilter`.
+
+## SearchGroup
+
+An internal representation of the boolean combination of filters. It is used by `parseFilter`, which is just a wrapper around `new SearchGroup(string).toJSON()`.
+
+Similar to an AST, it can be manipulated and transformed, or analyzed.

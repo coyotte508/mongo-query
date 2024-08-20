@@ -1,4 +1,5 @@
 export { inverseFilter } from "./inverse-filter";
 export { joinAnd } from "./join-and";
 export { simplifyFilter } from "./simplify-filter";
-export { parseFilter } from "./search-group";
+export * from "./search-group";
+export { parseFilter } from "./parse-filter";
