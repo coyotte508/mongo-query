@@ -172,7 +172,7 @@ export class SearchGroup {
     }
 
     if (toAdd.length) {
-      throw new Error("Adding keys to a SearchGroup is not implemented yet");
+      throw new Error("Adding keys to a SearchGroup is not implemented yet. Added keys: " + toAdd.join(", "));
     }
 
     this.remove(toRemove);
