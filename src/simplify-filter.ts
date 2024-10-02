@@ -16,9 +16,10 @@ export function simplifyFilter<T>(filter: Filter<T>): Filter<T> {
     }
   }
   if ("$or" in filter) {
-    filter.$or = filter.$or.filter((x) => !isEmptyObject(x));
     if (filter.$or.length === 0) {
       delete filter.$or;
+    } else if (filter.$or.length === 1) {
+      filter = joinAnd(omit(filter, ["$or"]) as Filter<T>, filter.$or[0] as Filter<T>);
     } else {
       filter = { ...filter, $or: filter.$or.map(simplifyFilter) };
     }
