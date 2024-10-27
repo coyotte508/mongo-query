@@ -173,6 +173,48 @@ export class SearchGroup {
     }
   }
 
+  group(keys: Set<string>) {
+    const smallest = this.smallestGroupWithKeys(keys)!.group;
+
+    let beginning: SearchValue | undefined;
+    let last: SearchValue | undefined;
+
+    for (const member of smallest) {
+      if (!beginning) {
+        if (member instanceof SearchGroup && [...keys].some((key) => [...member.keys].includes(key))) {
+          last = beginning = member;
+        } else if (member instanceof SearchItem && keys.has(member.key)) {
+          last = beginning = member;
+        }
+      } else {
+        if (member instanceof SearchGroup && [...keys].some((key) => [...member.keys].includes(key))) {
+          last = member;
+        } else if (member instanceof SearchItem && keys.has(member.key)) {
+          last = member;
+        }
+      }
+    }
+
+    const group = new SearchGroup();
+
+    group.first = beginning!;
+    group.next = last!.next;
+    last!.next = null;
+
+    if (beginning === smallest.first) {
+      smallest.first = group;
+
+      return;
+    }
+
+    for (const member of smallest) {
+      if (member.next?.item === beginning) {
+        member.next!.item = group;
+        return;
+      }
+    }
+  }
+
   breakGroup(keys: Set<string>) {
     const { group: smallest, parent } = this.smallestGroupWithKeys(keys)!;
 
