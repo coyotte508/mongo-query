@@ -150,6 +150,85 @@ export class SearchGroup {
     return traverse(this);
   }
 
+  swap(key1: string, key2: string) {
+    const [item1, item2] = [this.item(key1), this.item(key2)];
+
+    if (item1 && item2) {
+      [item1.key, item2.key] = [key2, key1];
+    }
+  }
+
+  item(key: string): SearchItem | undefined {
+    for (let item of this) {
+      if (item instanceof SearchItem) {
+        if (item.key === key) {
+          return item;
+        }
+      } else {
+        const result = item.item(key);
+        if (result) {
+          return result;
+        }
+      }
+    }
+  }
+
+  breakGroup(keys: Set<string>) {
+    const { group: smallest, parent } = this.smallestGroupWithKeys(keys)!;
+
+    if (!parent) {
+      console.log(smallest);
+      throw new Error("Ces critères ne sont pas groupés");
+    }
+
+    if (smallest === parent.first) {
+      smallest.last!.next = smallest.next;
+      parent.first = smallest.first;
+      return;
+    }
+
+    for (const member of parent) {
+      if (member.next?.item === smallest) {
+        smallest.last!.next = smallest.next;
+        member.next.item = smallest.first!;
+        return;
+      }
+    }
+  }
+
+  private smallestGroupWithKeys(
+    keys: Set<string>,
+    parent?: SearchGroup,
+  ): { group: SearchGroup; parent: SearchGroup | null } | null {
+    const ownKeys = new Set([...this.keys]);
+    for (const key of keys) {
+      if (!ownKeys.has(key)) {
+        return null;
+      }
+    }
+
+    for (const item of this) {
+      if (item instanceof SearchGroup) {
+        const group = item.smallestGroupWithKeys(keys, this);
+
+        if (group) {
+          return group;
+        }
+      }
+    }
+
+    return { group: this, parent: parent ?? null };
+  }
+
+  get last() {
+    let last: SearchValue | null = null;
+
+    for (last of this) {
+    }
+
+    return last;
+  }
+
   /**
    * Remove all keys not in the set
    */
