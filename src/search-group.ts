@@ -292,11 +292,30 @@ export class SearchGroup {
       }
     }
 
-    if (toAdd.length) {
-      throw new Error("Adding keys to a SearchGroup is not implemented yet. Added keys: " + toAdd.join(", "));
+    this.remove(toRemove);
+    this.add(...toAdd);
+  }
+
+  add(...keys: string[]) {
+    if (keys.length === 0) {
+      return;
+    }
+    if (!this.first) {
+      this.first = new SearchItem(keys[0]);
+      this.add(...keys.slice(1));
+      return;
     }
 
-    this.remove(toRemove);
+    let last = this.last!;
+
+    for (const key of keys) {
+      last.next = {
+        item: new SearchItem(key),
+        operator: SearchOperator.And,
+      };
+
+      last = last.next.item;
+    }
   }
 
   remove(keys: Set<string>) {

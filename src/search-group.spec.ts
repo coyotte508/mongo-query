@@ -123,9 +123,7 @@ describe("SearchGroup", () => {
     expect(group.toString()).to.equal("!(A&&C)");
   });
 
-  // Don't know whether to return !(A&&C&&E) or (!(A&&C)&&E)
-  // so not implemented for now
-  it.skip("should be able to add keys", () => {
+  it("should be able to add keys", () => {
     const group = SearchGroup.fromString("!(A&&C)");
     group.keys = new Set(["A", "C", "E"]);
     expect(group.toString()).to.equal("!(A&&C&&E)");
