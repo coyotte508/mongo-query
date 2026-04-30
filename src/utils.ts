@@ -42,3 +42,19 @@ export function isEmptyObject(o: any): o is Record<string, never> {
 
   return true;
 }
+
+export function isOperatorObject(o: unknown): o is Record<string, unknown> {
+  if (!o || typeof o !== "object" || Array.isArray(o)) {
+    return false;
+  }
+
+  let hasOperator = false;
+  for (const key in o) {
+    if (!key.startsWith("$")) {
+      return false;
+    }
+    hasOperator = true;
+  }
+
+  return hasOperator;
+}

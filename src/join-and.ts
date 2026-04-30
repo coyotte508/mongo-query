@@ -1,5 +1,5 @@
 import { Filter } from "mongodb";
-import { intersectionKeys, omit, pick } from "./utils";
+import { intersectionKeys, isOperatorObject, omit, pick } from "./utils";
 
 export function joinAnd<T>(...conds: Filter<T>[]): Filter<T> {
   if (!conds.length) {
@@ -12,16 +12,34 @@ export function joinAnd<T>(...conds: Filter<T>[]): Filter<T> {
     return firstCond;
   }
 
-  const extraKeys = intersectionKeys(firstCond, secondCond);
+  const sharedKeys = intersectionKeys(firstCond, secondCond);
+  const mergedOperators: Record<string, unknown> = {};
+  const conflictingKeys: typeof sharedKeys = [];
+
+  for (const key of sharedKeys) {
+    const a = (firstCond as Record<string, unknown>)[key as string];
+    const b = (secondCond as Record<string, unknown>)[key as string];
+
+    if (isOperatorObject(a) && isOperatorObject(b) && !Object.keys(a).some((k) => k in b)) {
+      mergedOperators[key] = {
+        ...a,
+        ...b,
+      };
+      continue;
+    }
+
+    conflictingKeys.push(key);
+  }
 
   return joinAnd(
     {
       ...firstCond,
-      ...omit(secondCond, extraKeys),
-      ...(extraKeys.length && {
-        $and: [...("$and" in firstCond ? firstCond.$and : []), pick(secondCond, extraKeys)],
+      ...omit(secondCond, sharedKeys),
+      ...mergedOperators,
+      ...(conflictingKeys.length && {
+        $and: [...("$and" in firstCond ? firstCond.$and : []), pick(secondCond, conflictingKeys)],
       }),
     },
-    ...conds.slice(2)
+    ...conds.slice(2),
   );
 }
